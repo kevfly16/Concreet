@@ -1,0 +1,30 @@
+{
+  "name": "concreet",
+  "version": "1.0.0",
+  "description": "A web app that lets users add/edit and share notes. The notes have primarily text with some images and other embedded content and links. The app is collaborative with multiple users being able to make changes.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kevfly16/Concreet.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kevfly16/Concreet/issues"
+  },
+  "homepage": "https://github.com/kevfly16/Concreet#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "express-session": "^1.15.6",
+    "mongodb": "^3.1.1",
+    "mongoose": "^5.2.7",
+    "npm": "^6.3.0",
+    "semantic-ui": "^2.3.3"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  }
+}
