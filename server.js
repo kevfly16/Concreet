@@ -1,19 +1,20 @@
 #!/bin/env node
 
-var express = require('express');
-var fs      = require('fs');
+var express      = require('express');
+var cookieParser = require('cookie-parser');
+var fs           = require('fs');
 
 // Mongoose
-var mongoose = require('mongoose');
+var mongoose     = require('mongoose');
 // use native promises (default mongoose promises [mpromise] is deprecated)
 mongoose.Promise = global.Promise; 
 
-var hash = require('./pass').hash;
+var hash         = require('./pass').hash;
 
-var session = require('express-session');
+var session      = require('express-session');
 
 // Database
-var MongoClient = require('mongodb').MongoClient;
+var MongoClient  = require('mongodb').MongoClient;
 
 
 /**
@@ -182,7 +183,7 @@ var Concreet = function () {
 
         var bodyParser = require('body-parser')
         self.app.use(bodyParser.urlencoded({ extended: false }));
-        self.app.use(express.cookieParser('Authentication'));
+        self.app.use(cookieParser('Authentication'));
 
         self.app.use(session({
             'secret': process.env.SESSION_SECRET,
