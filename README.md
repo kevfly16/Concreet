@@ -23,8 +23,4 @@
 20. **BONUS**: Auto save the content without the save button, as soon as changes happen.
 
 ## Infra:
-<img src="https://getdeveloper.net/wp-content/uploads/2018/02/semantic.png" width="150">
-<img src="http://pluspng.com/img-png/nodejs-logo-png-node-js-development-296.png" width="150">
-<img src="https://cacm.acm.org/system/assets/0002/7119/042117_Theodo_MongoDB.large.jpg?1492791427&1492791427" width="150">
-<img src="https://dailysmarty-production.s3.amazonaws.com/uploads/post/img/509/feature_thumb_heroku-logo.jpg" width="150">
-<img src="https://www.electronicsmedia.info/wp-content/uploads/2017/08/Mlab.png" width="150">
+<img src="https://getdeveloper.net/wp-content/uploads/2018/02/semantic.png" width="150"> <img src="http://pluspng.com/img-png/nodejs-logo-png-node-js-development-296.png" width="150"> <img src="https://cacm.acm.org/system/assets/0002/7119/042117_Theodo_MongoDB.large.jpg?1492791427&1492791427" width="150"> <img src="https://dailysmarty-production.s3.amazonaws.com/uploads/post/img/509/feature_thumb_heroku-logo.jpg" width="150"> <img src="https://www.electronicsmedia.info/wp-content/uploads/2017/08/Mlab.png" width="150">
