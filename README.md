@@ -1,5 +1,7 @@
 # Concreet
 
+A web app that lets users add/edit and share notes. The notes have primarily text with some images and other embedded content and links. The app is collaborative with multiple users being able to make changes.
+
 ## Features:
 1. It should be mobile friendly
 1. A user can create a note
