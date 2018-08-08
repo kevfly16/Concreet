@@ -265,7 +265,7 @@ var Concreet = function () {
 /**
  *  main():  Main code.
  */
-var app = new Concreet();
-app.initialize();
-app.start();
+var concreet = new Concreet();
+concreet.initialize();
+concreet.start();
 
