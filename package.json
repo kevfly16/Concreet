@@ -22,7 +22,9 @@
     "express-session": "^1.15.6",
     "mongodb": "^3.1.1",
     "mongoose": "^5.2.7",
+    "mongoose-sequence": "^4.0.1",
     "npm": "^6.3.0",
+    "pug": "^2.0.3",
     "semantic-ui": "^2.3.3"
   },
   "devDependencies": {

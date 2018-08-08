@@ -9,7 +9,7 @@
   <!-- Site Properties -->
   <title>Login</title>
   <link rel="stylesheet" type="text/css" href="semantic/dist/semantic.min.css">
-  <link rel="stylesheet" type="text/css" href="css/login.css">
+  <link rel="stylesheet" type="text/css" href="css/signup.css">
 
   <script
   src="https://code.jquery.com/jquery-3.1.1.min.js"
@@ -17,7 +17,7 @@
   crossorigin="anonymous"></script>
   <script src="semantic/dist/semantic.min.js"></script>
   <script src="js/common.js"></script>
-  <script src="js/login.js"></script>
+  <script src="js/signup.js"></script>
 
 </head>
 <body>
@@ -27,10 +27,10 @@
     <h2 class="ui blue image header">
       <img src="assets/images/concreet-logo.png" class="image">
       <div class="content">
-        Log-in to your account
+        Sign-Up For An Account
       </div>
     </h2>
-    <form class="ui large form" method="post" action="/login" role="login">
+    <form class="ui large form" method="post" action="/signup" role="signup">
       <div class="ui stacked segment">
         <div class="field">
           <div class="ui left icon input">
@@ -44,16 +44,18 @@
             <input type="password" name="password" placeholder="Password" required="" autocomplete="current-password">
           </div>
         </div>
-        <div class="ui fluid large blue submit button">Login</div>
+        <div class="field">
+          <div class="ui left icon input">
+            <i class="lock icon"></i>
+            <input type="password" name="confirm" placeholder="Confirm Password" required="" autocomplete="confirm-password">
+          </div>
+        </div>
+        <div class="ui fluid large blue submit button">Sign Up</div>
       </div>
 
       <div class="ui error message"></div>
 
     </form>
-
-    <div class="ui message">
-      New to us? <a href="/signup">Sign Up</a>
-    </div>
   </div>
 </div>
 
