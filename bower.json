@@ -1,0 +1,21 @@
+{
+  "name": "concreet",
+  "description": "A web app that lets users add/edit and share notes. The notes have primarily text with some images and other embedded content and links. The app is collaborative with multiple users being able to make changes.",
+  "main": "app.js",
+  "authors": [
+    "Kevin Flyangolts <kevfly16@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/kevfly16/Concreet",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "medium-editor-insert-plugin": "^2.5.0"
+  }
+}
