@@ -3,14 +3,15 @@
 var express         = require('express');
 var cookieParser    = require('cookie-parser');
 var fs              = require('fs');
+var pug             = require('pug');
 
 // Mongoose
 var mongoose        = require('mongoose');
 // use native promises (default mongoose promises [mpromise] is deprecated)
 mongoose.Promise    = global.Promise; 
 
-// Monogoose AutoIncrement Plugin 
-var AutoIncrement   = require('mongoose-sequence')(mongoose);
+// Mongoose ObjectId
+var ObjectId = mongoose.Types.ObjectId;
 
 var hash            = require('./pass').hash;
 
@@ -19,6 +20,8 @@ var session         = require('express-session');
 // Database
 var MongoClient     = require('mongodb').MongoClient;
 
+// Top level folder id containing all subfolders and notes
+const TOP_LEVEL_FOLDER_ID = JSON.parse(fs.readFileSync('seeds/folders.json', 'utf8'))[0]["_id"]["$oid"];
 
 /**
  *  Define the application.
@@ -46,14 +49,7 @@ var Concreet = function () {
       mongoUser = process.env.DATABASE_USER,
       mongoPassword = process.env.DATABASE_PASSWORD;
 
-    if (mongoHost && mongoPort && mongoDatabase) {
-      self.mongoURL = 'mongodb://';
-      if (mongoUser && mongoPassword) {
-        self.mongoURL += mongoUser + ':' + mongoPassword + '@';
-      }
-      // Provide UI label that excludes user id and pw
-      self.mongoURL += mongoHost + ':' +  mongoPort + '/' + mongoDatabase;
-    }
+    self.mongoURL = 'mongodb://' + mongoUser + ':' + mongoPassword + '@' + mongoHost + ':' +  mongoPort + '/' + mongoDatabase
     
     mongoose.connect(self.mongoURL);
     
@@ -65,19 +61,28 @@ var Concreet = function () {
 
     self.User = mongoose.model('users', UserSchema);
 
-    var NoteSchema = new mongoose.Schema({
-      version: Number,
-      title: String,
+    var VersionSchema = new mongoose.Schema({
       text: String,
       created_by: String,
       created_at: { type: Date, default: Date.now }
     });
 
-    NoteSchema.plugin(AutoIncrement, { id: 'version_seq', inc_field: 'version', reference_fields: ['_id'] });
+    self.Version = mongoose.model('versions', VersionSchema);
+
+    var NoteSchema = new mongoose.Schema({
+      title: String,
+      versions: [VersionSchema],
+      created_by: String,
+      created_at: { type: Date, default: Date.now }
+    });
+
+    self.Note = mongoose.model('notes', NoteSchema);
 
     var FolderSchema = new mongoose.Schema({
       title: String,
-      notes: [NoteSchema]
+      notes: [NoteSchema],
+      created_by: String,
+      created_at: { type: Date, default: Date.now }
     });
 
     FolderSchema.add({
@@ -86,29 +91,6 @@ var Concreet = function () {
 
     self.Folder = mongoose.model('folders', FolderSchema);
   };
-
-
-  /**
-   *  Populate the cache.
-   */
-  self.populateCache = function () {
-    if (typeof self.zcache === "undefined") {
-      self.zcache = { 'index.html': '', 'login.html': '', 'signup.html': '' };
-    }
-
-    //  Local cache for static content.
-    self.zcache['index.html'] = fs.readFileSync('./index.html');
-    self.zcache['login.html'] = fs.readFileSync('./login.html');
-    self.zcache['signup.html'] = fs.readFileSync('./signup.html');
-  };
-
-
-  /**
-   *  Retrieve entry (content) from cache.
-   *  @param {string} key  Key identifying content to retrieve from cache.
-   */
-  self.cache_get = function (key) { return self.zcache[key]; };
-
 
   /**
    *  terminator === the termination handler
@@ -155,28 +137,74 @@ var Concreet = function () {
     self.get_routes['/'] = function (req, res) {
       res.setHeader('Content-Type', 'text/html');
       self.requiredAuthentication(req, res, false, function() {
-        res.send(self.cache_get('index.html') );
+        self.getFolder(TOP_LEVEL_FOLDER_ID, function(err, folder) {
+          if (err) {
+            res.status(404).send('Not Found!');
+          } else {
+            res.render('dashboard', Object.assign(folder, { parent: TOP_LEVEL_FOLDER_ID }));
+          }
+        });
       });
     };
 
+    self.get_routes['/login'] = function (req, res) {
+      if (req.session.user) {
+        res.redirect('/');
+      } else {
+        res.render('login');
+      }
+    }
+
     self.get_routes['/signup'] = function (req, res) {
       res.setHeader('Content-Type', 'text/html');
-      res.send(self.cache_get('signup.html') );
+      res.render('signup');
     };
 
     self.get_routes['/view/:folder'] = function (req, res) {
-      var folderId = req.params.folder;
+      res.setHeader('Content-Type', 'text/html');
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        self.getFolder(folderId, function(err, folder) {
+          if (err) {
+            res.status(404).send('Not Found!');
+          } else {
+            res.render('dashboard', Object.assign(folder, { parent: folderId }));
+          }
+        });
+      });
     }
 
     self.get_routes['/view/:folder/:note'] = function (req, res) {
-      var folderId = req.params.folder;
-      var noteId = req.params.note;
+      res.setHeader('Content-Type', 'text/html');
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        var noteId = req.params.note;
+        self.getNote(folderId, noteId, function(err, note) {
+          if (err) {
+            res.status(404).send('Not Found!');
+          } else {
+            // TODO: get correct version
+            res.render('note', Object.assign(note, { parent: folderId }));
+          }
+        });
+      });
     }
 
     self.get_routes['/view/:folder/:note/:version'] = function (req, res) {
-      var folderId = req.params.folder;
-      var noteId = req.params.note;
-      var version = req.params.version;
+      res.setHeader('Content-Type', 'text/html');
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        var noteId = req.params.note;
+        var version = req.params.version;
+        self.getNote(folderId, noteId, function(err, note) {
+          if (err) {
+            res.status(404).send('Not Found!');
+          } else {
+            // TODO: get correct version
+            res.render('note', Object.assign(note, { parent: folderId }));
+          }
+        });
+      });
     }
 
     self.get_routes['/logout'] = function (req, res) {
@@ -190,18 +218,20 @@ var Concreet = function () {
       self.authenticate(req.body.username, req.body.password, function (err, user) {
         if (user) {
           req.session.user = user;
+          res.redirect('/');
+        } else {
+          res.redirect('/?error=invalid_username_or_password');
         }
-        res.redirect('/');
       });
     };
 
     self.post_routes['/signup'] = function (req, res) {
-      var username = req.body.username
-      var password = req.body.password
-      var confirm = req.body.confirm
+      var username = req.body.username,
+          password = req.body.password,
+          confirm  = req.body.confirm;
 
       if (password !== confirm) {
-        res.redirect('/signup?error=' + 'your_passwords_did_not_match')
+        res.redirect('/signup?error=your_passwords_did_not_match')
       }
 
       self.User.findOne({
@@ -210,14 +240,14 @@ var Concreet = function () {
       
       function (err, user) {
         if (user) {
-          res.redirect('/signup?error=' + 'this_username_already_exists')
+          res.redirect('/signup?error=this_username_already_exists')
         } else {
           hash(password, function (err, salt, hash) {
             if (err) throw err;
             var user = new self.User({
-                username: username,
-                salt: salt.toString('utf-8'),
-                hash: hash.toString('utf-8')
+              username: username,
+              salt: salt.toString('utf-8'),
+              hash: hash.toString('utf-8')
             }).save(function (err, newUser) {
               if (err) throw err;
               req.session.user = newUser;
@@ -240,6 +270,9 @@ var Concreet = function () {
     // static directory setup for using relative paths in html
     self.app.use(express.static(__dirname + "/public/"));
     self.app.use(express.static(__dirname + "/vendor/"));
+
+    self.app.set('views', __dirname + '/public/views');
+    self.app.set('view engine', 'pug');
 
     var bodyParser = require('body-parser')
     self.app.use(bodyParser.urlencoded({ extended: false }));
@@ -269,7 +302,6 @@ var Concreet = function () {
    */
   self.initialize = function () {
     self.setupVariables();
-    self.populateCache();
     self.setupTerminationHandlers();
 
     // Create the express server and routes.
@@ -311,15 +343,155 @@ var Concreet = function () {
 
   };
 
-   self.requiredAuthentication = function (req, res, send404, next) {
+  self.requiredAuthentication = function (req, res, send404, next) {
     if (req.session.user) {
       next();
     } else if (send404) {
       res.status(404).send('Not Found!');
     } else {
-      res.send(self.cache_get('login.html') );
+      res.redirect('/login');
     }
   };
+
+  self.getVersions = function(folderId, noteId, fn) {
+    self.Folder.aggregate([
+      {
+        $match: { _id: new ObjectId(folderId) }
+      }, {
+        $unwind: '$notes'
+      }, {
+        $unwind: '$notes.versions'
+      }, {
+        $match: { 'notes._id': { $eq: new ObjectId(noteId) } }
+      }, {
+        $sort: { 'notes.versions.created_at': -1 }
+      }, {
+        $project: {
+          _id: '$notes.versions._id', 
+          text: '$notes.versions.text', 
+          created_by: '$notes.versions.created_by', 
+          created_at: '$notes.versions.created_at' 
+        }
+      }
+    ],
+    function (err, note) {
+      if (note) {
+        if (err) return fn(new Error('cannot find note'));
+        fn(null, note)
+      } else {
+        return fn(new Error('cannot find note'));
+      }
+    });
+  };
+
+  self.getNoteDetails = function(folderId, noteId, fn) {
+    self.Folder.aggregate([
+      {
+        $match: { _id: new ObjectId(folderId) }
+      }, {
+        $unwind: '$notes'
+      }, {
+        $match: { 'notes._id': { $eq: new ObjectId(noteId) } }
+      }, {
+        $project: {
+          _id: '$notes._id',
+          title: '$notes.title',
+          created_by: '$notes.created_by',
+          created_at: '$notes.created_at'
+        }
+      }
+    ],
+    function (err, note) {
+      if (note) {
+        if (err) return fn(new Error('cannot find note'));
+        fn(null, note)
+      } else {
+        return fn(new Error('cannot find note'));
+      }
+    });
+  };
+
+  self.getNote = function(folderId, noteId, fn) {
+    var note = {};
+
+    self.getNoteDetails(folderId, noteId, function(err, note) {
+      if (err) return;
+      note = note;
+
+      self.getVersions(folderId, noteId, function(err, versions) {
+        if (err) return;
+        note['versions'] = versions
+      });
+
+      fn(null, note);
+    });
+  }
+
+  self.getNotesInFolder = function(folderId, fn) {
+    self.Folder.aggregate([
+      {
+        $match: { _id: new ObjectId(folderId) }
+      }, {
+        $unwind: '$notes'
+      }, {
+        $project: {
+          _id: '$notes._id',
+          title: '$notes.title',
+          created_by: '$notes.created_by',
+          created_at: '$notes.created_at'
+        }
+      }
+    ],
+    function (err, folder) {
+      if (folder) {
+        if (err) return fn(new Error('cannot find folder'));
+        fn(null, folder)
+      } else {
+        return fn(new Error('cannot find folder'));
+      }
+    });
+  };
+
+  self.getFoldersInFolder = function(folderId, fn) {
+    self.Folder.aggregate([
+      {
+        $match: { _id: new ObjectId(folderId) }
+      }, {
+        $unwind: '$folders'
+      }, {
+        $project: {
+          _id: '$folders._id',
+          title: '$folders.title',
+          created_by: "$folders.created_by",
+          created_at: "$folders.created_at"
+        }
+      }
+    ],
+    function (err, folder) {
+      if (folder) {
+        if (err) return fn(new Error('cannot find folder'));
+        fn(null, folder)
+      } else {
+        return fn(new Error('cannot find folder'));
+      }
+    });
+  };
+
+  self.getFolder = function(folderId, fn) {
+    var items = { folders: [], notes: [] };
+    
+    self.getFoldersInFolder(folderId, function(err, folders) {
+      if (err) return;
+      items['folders'] = folders;
+
+      self.getNotesInFolder(folderId, function(err, notes) {
+        if (err) return;
+        items['notes'] = notes
+
+        fn(null, items);
+      });
+    });
+  }
 
 };   /*  Concreet Application.  */
 

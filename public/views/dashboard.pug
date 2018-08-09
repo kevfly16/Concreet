@@ -1,0 +1,70 @@
+doctype html
+
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    meta(http-equiv="X-UA-Compatible" content="IE=edge,chrome=1")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0")
+
+    title Dashboard
+    link(rel="stylesheet" type="text/css" href="/semantic/dist/semantic.min.css")
+    link(rel="stylesheet" type="text/css" href="/css/common.css")
+    link(rel="stylesheet" type="text/css" href="/css/dashboard.css")
+
+    script(src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous")
+    script(src="/semantic/dist/semantic.min.js")
+    script(src="/js/common.js")
+    script(src="/js/dashboard.js")
+
+  body
+    include head.pug
+
+    .ui.main.container
+      
+      .ui.center.aligned.grid
+        .twelve.wide.column.right.aligned
+          .ui.container
+            .ui.large.buttons
+              .ui.icon.blue.button(style="padding-left: 15px;padding-right: 15px;")
+                i.white.folder.outline.icon
+                i.white.plus.circle.icon(style="line-height: 0;text-indent: -5px;font-size: 12px;")
+              .or
+              .ui.icon.blue.button(style="padding-left: 20px;")
+                i.white.sticky.note.outline.icon
+                i.white.plus.circle.icon(style="line-height: 0;text-indent: -5px;font-size: 12px;")
+
+      .ui.center.aligned.grid
+        each folder in folders
+          .four.wide.column
+            a.ui.raised.link.card(href=`/view/${folder["_id"]}`)
+              .image
+                img.type(src="/assets/images/folder-icon.png")
+              .content
+                .header= folder['title']
+                .meta
+                  span
+                    | Created 
+                    = folder['created_at'].toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })
+              
+              .extra.content
+                i.user.icon
+                = folder['created_by']
+
+        each note in notes
+          .four.wide.column
+            .four.wide.column
+              a.ui.raised.link.card(href=`/view/${parent}/${note["_id"]}`)
+                .image
+                  img.type(src="/assets/images/note-icon.png")
+                .content
+                  .header= note['title']
+                  .meta
+                    span
+                      | Updated 
+                      = note['created_at'].toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })
+                
+                .extra.content    
+                  i.user.icon
+                  = note['created_by']
+
+    include foot.pug

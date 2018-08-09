@@ -13,9 +13,9 @@ String.prototype.capitalize = function() {
 }
 
 $(document).ready(function() {
-	var error = getParameterByName('error');
-	if (error) {
-		$('.ui.error.message').append('<ul class="list"><li>' + error.replace(/_/g, ' ').capitalize() + '</li></ul>');
-        $('.ui.error.message').show();
-	}
+  var error = getParameterByName('error');
+  if (error) {
+    $('.ui.error.message').append('<ul class="list"><li>' + error.replace(/_/g, ' ').capitalize() + '</li></ul>');
+    $('.ui.error.message').show();
+  }
 });
