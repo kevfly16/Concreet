@@ -25,9 +25,7 @@ A web app that lets users add/edit and share notes. The notes have primarily tex
 - [ ] **BONUS**: Auto save the content without the save button, as soon as changes happen.
 
 ## URL
-```
-[Concreet](https://concreet.herokuapp.com)
-```
+* [Concreet](https://concreet.herokuapp.com)
 
 ## Know Issues / Improvements:
 - Some of the UX design could be improved. Some workflows aren't as efficient, intuitive, or easy as they can be.
