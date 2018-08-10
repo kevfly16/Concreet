@@ -8,7 +8,8 @@
   "description": "A web app that lets users add/edit and share notes. The notes have primarily text with some images and other embedded content and links. The app is collaborative with multiple users being able to make changes.",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "./node_modules/bower/bin/bower install" 
   },
   "repository": {
     "type": "git",
