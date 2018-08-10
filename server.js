@@ -16,6 +16,7 @@ var ObjectId = mongoose.Types.ObjectId;
 var hash            = require('./pass').hash;
 
 var session         = require('express-session');
+var RedisStore      = require('connect-redis')(session);
 
 // Database
 var MongoClient     = require('mongodb').MongoClient;
@@ -422,9 +423,15 @@ var Concreet = function () {
     self.app.use(cookieParser('Authentication'));
 
     self.app.use(session({
+      'store': new RedisStore({
+        'host': process.env.REDIS_HOST,
+        'port': process.env.REDIS_PORT,
+        'password': process.env.REDIS_PASSWORD
+      }),
       'secret': process.env.SESSION_SECRET,
       'resave': false,
       'saveUninitialized': true,
+      'cookie': { 'maxAge': 6000000 }
     }));
 
     self.createRoutes();
