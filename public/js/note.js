@@ -22,7 +22,8 @@ $(document).ready(function() {
       embeds: {
         label: '<i class="image outline icon" style="font-size: 16px;line-height: 1.9em;text-indent: 3px;"></i>',
         placeholder: 'Paste a YouTube, Vimeo, Facebook, Twitter, Instagram or image link',
-        parseOnPaste: true
+        parseOnPaste: true,
+        oembedProxy: 'https://iframe.ly/api/oembed?iframe=1&api_key=2f981739c3b8f0a53ddf95'
       }
     }
   });
