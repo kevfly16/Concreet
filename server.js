@@ -42,7 +42,7 @@ var Concreet = function () {
   self.setupVariables = function () {
     //  Set the environment variables we need.
     self.port       = process.env.PORT || 8080;
-    self.ipaddress  = process.env.IP   || '127.0.0.1';
+    self.ipaddress  = process.env.IP   || '0.0.0.0';
 
     var mongoHost = process.env.MONGO_HOST,
       mongoPort = process.env.MONGO_PORT,
