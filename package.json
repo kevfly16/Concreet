@@ -25,6 +25,7 @@
     "cookie-parser": "^1.4.3",
     "express": "^4.16.3",
     "express-session": "^1.15.6",
+    "gulp": "^3.9.1",
     "mongodb": "^3.1.1",
     "mongoose": "^5.2.7",
     "mongoose-sequence": "^4.0.1",
@@ -34,7 +35,6 @@
   },
   "devDependencies": {
     "dotenv": "^6.0.0",
-    "gulp": "^3.9.1",
     "node-env-run": "^3.0.2",
     "node-mongo-seeds": "^3.1.0"
   }
