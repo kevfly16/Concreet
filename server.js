@@ -81,12 +81,9 @@ var Concreet = function () {
     var FolderSchema = new mongoose.Schema({
       title: String,
       notes: [NoteSchema],
+      parent: mongoose.Schema.ObjectId,
       created_by: String,
       created_at: { type: Date, default: Date.now }
-    });
-
-    FolderSchema.add({
-      folders: [FolderSchema]
     });
 
     self.Folder = mongoose.model('folders', FolderSchema);
@@ -160,6 +157,38 @@ var Concreet = function () {
       res.render('signup');
     };
 
+    self.get_routes['/new/:folder/folder'] = function (req, res) {
+      res.setHeader('Content-Type', 'text/html');
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        self.Folder.findOne({ _id: folderId }, function(err, folder) {
+          if (folder) {
+            if (err) return res.redirect('/?error=something_went_wrong_please_try_again_later')
+
+            res.render('folder', { parent: folderId });
+          } else {
+            res.redirect('/');
+          }
+        });
+      });
+    };
+
+    self.get_routes['/new/:folder/note'] = function (req, res) {
+      res.setHeader('Content-Type', 'text/html');
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        self.Folder.findOne({ _id: folderId }, function(err, folder) {
+          if (folder) {
+            if (err) return res.redirect('/?error=something_went_wrong_please_try_again_later')
+
+            res.render('note', { parent: folderId });
+          } else {
+            res.redirect('/');
+          }
+        });
+      });
+    };
+
     self.get_routes['/view/:folder'] = function (req, res) {
       res.setHeader('Content-Type', 'text/html');
       self.requiredAuthentication(req, res, false, function() {
@@ -174,7 +203,7 @@ var Concreet = function () {
       });
     }
 
-    self.get_routes['/view/:folder/:note'] = function (req, res) {
+    self.get_routes['/edit/:folder/:note'] = function (req, res) {
       res.setHeader('Content-Type', 'text/html');
       self.requiredAuthentication(req, res, false, function() {
         var folderId = req.params.folder;
@@ -183,25 +212,42 @@ var Concreet = function () {
           if (err) {
             res.status(404).send('Not Found!');
           } else {
-            // TODO: get correct version
-            res.render('note', Object.assign(note, { parent: folderId }));
+            // get latest edit
+            res.render('note', Object.assign(note, { parent: folderId, version: note['versions'].length - 1 }));
           }
         });
       });
     }
+
+    self.get_routes['/:folder/:note/history'] = function(req, res) {
+      res.setHeader('Content-Type', 'text/html');
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        var noteId = req.params.note;
+        self.getNote(folderId, noteId, function(err, note) {
+          if (err) {
+            res.status(404).send('Not Found!');
+          } else {
+            res.render('history', Object.assign(note, { parent: folderId }));
+          }
+        });
+      });
+    };
 
     self.get_routes['/view/:folder/:note/:version'] = function (req, res) {
       res.setHeader('Content-Type', 'text/html');
       self.requiredAuthentication(req, res, false, function() {
         var folderId = req.params.folder;
         var noteId = req.params.note;
-        var version = req.params.version;
+        var versionId = req.params.version;
         self.getNote(folderId, noteId, function(err, note) {
           if (err) {
             res.status(404).send('Not Found!');
           } else {
-            // TODO: get correct version
-            res.render('note', Object.assign(note, { parent: folderId }));
+            var version = note['versions'].findIndex(function(element) {
+              return element['_id'].toString() === versionId;
+            });
+            res.render('revision', Object.assign(note, { parent: folderId, version: version }));
           }
         });
       });
@@ -220,7 +266,7 @@ var Concreet = function () {
           req.session.user = user;
           res.redirect('/');
         } else {
-          res.redirect('/?error=invalid_username_or_password');
+          res.redirect('/login?error=invalid_username_or_password');
         }
       });
     };
@@ -243,18 +289,114 @@ var Concreet = function () {
           res.redirect('/signup?error=this_username_already_exists')
         } else {
           hash(password, function (err, salt, hash) {
-            if (err) throw err;
+            if (err) return res.redirect('/signup?error=something_went_wrong_please_try_again_later');
             var user = new self.User({
               username: username,
               salt: salt.toString('utf-8'),
               hash: hash.toString('utf-8')
             }).save(function (err, newUser) {
-              if (err) throw err;
+              if (err) return res.redirect('/signup?error=something_went_wrong_please_try_again_later');
               req.session.user = newUser;
               res.redirect('/');
             });
           });
         }
+      });
+    };
+
+    self.post_routes['/new/:folder/folder'] = function (req, res) {
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        self.Folder.findOne({ _id: folderId }, function(err, folder) {
+          if (folder) {
+            if (err) return res.redirect(`/view/${folderId}?error=something_went_wrong_please_try_again_later`)
+
+            var folder = new self.Folder({ 
+              title: req.body.title, 
+              parent: folderId,
+              created_by: req.session.user['username'] 
+            }).save(function (err, newFolder) {
+              if (err) return res.redirect('/signup?error=something_went_wrong_please_try_again_later');
+              var success = "";
+              res.redirect(`/view/${folderId}?success=successfully_created_a_new_folder`);
+            });
+          } else {
+            res.redirect('/');
+          }
+        });
+      });
+    };
+
+    self.post_routes['/new/:folder/note'] = function (req, res) {
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        self.Folder.findOne({ _id: folderId }, function(err, folder) {
+          if (folder) {
+            if (err) return res.redirect(`/view/${folderId}?error=something_went_wrong_please_try_again_later`)
+            
+            folder['notes'].push(new self.Note({ 
+              title: req.body.title,
+              created_by: req.session.user['username'],
+              versions: [
+                new self.Version({ 
+                  text: req.body.text, 
+                  created_by: req.session.user['username'] 
+                })
+              ]
+            }));
+
+            folder.save();
+            res.redirect(`/view/${folderId}?success=successfully_created_a_new_note`);
+          } else {
+            res.redirect('/');
+          }
+        });
+      });
+    };
+
+    self.post_routes['/edit/:folder'] = function (req, res) {
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        self.Folder.findOne({ _id: folderId }, function(err, folder) {
+          if (folder) {
+            if (err) return res.redirect(`/view/${folderId}?error=something_went_wrong_please_try_again_later`);
+
+            folder['title'] = req.body.title
+            folder.save();
+
+            res.redirect(`/view/${folderId}?success=successfully_updated_the_folder`);
+          } else {
+            res.redirect('/');
+          }
+        });
+      });
+    };
+
+    self.post_routes['/edit/:folder/:note'] = function (req, res) {
+      self.requiredAuthentication(req, res, false, function() {
+        var folderId = req.params.folder;
+        var noteId = req.params.note;
+        self.Folder.findOne({ _id: folderId }, function(err, folder) {
+          if (folder) {
+            if (err) return res.redirect(`/view/${folderId}?error=something_went_wrong_please_try_again_later`);
+
+            var note = folder['notes'].find(function(elem) {
+              return elem._id.toString() === noteId;
+            });
+
+            note['title'] = req.body.title;
+            note['versions'].push(new self.Version({
+              text: req.body.text,
+              created_by: req.session.user['username']
+            }));
+
+            folder.save();
+
+            res.redirect(`/edit/${folderId}/${noteId}?success=successfully_updated_the_note`);
+          } else {
+            res.redirect('/');
+          }
+        });
       });
     };
   };
@@ -270,6 +412,7 @@ var Concreet = function () {
     // static directory setup for using relative paths in html
     self.app.use(express.static(__dirname + "/public/"));
     self.app.use(express.static(__dirname + "/vendor/"));
+    self.app.use(express.static(__dirname + "/bower_components/"));
 
     self.app.set('views', __dirname + '/public/views');
     self.app.set('view engine', 'pug');
@@ -364,7 +507,7 @@ var Concreet = function () {
       }, {
         $match: { 'notes._id': { $eq: new ObjectId(noteId) } }
       }, {
-        $sort: { 'notes.versions.created_at': -1 }
+        $sort: { 'notes.versions.created_at': 1 }
       }, {
         $project: {
           _id: '$notes.versions._id', 
@@ -374,12 +517,12 @@ var Concreet = function () {
         }
       }
     ],
-    function (err, note) {
-      if (note) {
-        if (err) return fn(new Error('cannot find note'));
-        fn(null, note)
+    function (err, versions) {
+      if (versions) {
+        if (err) return fn(new Error('cannot find versions'));
+        fn(null, versions)
       } else {
-        return fn(new Error('cannot find note'));
+        return fn(new Error('cannot find versions'));
       }
     });
   };
@@ -412,18 +555,25 @@ var Concreet = function () {
   };
 
   self.getNote = function(folderId, noteId, fn) {
-    var note = {};
+    var hexstringRegex = "^[0-9a-fA-F]{24}$"
+    if (!folderId.match(hexstringRegex) || !noteId.match(hexstringRegex)) {
+      return fn(new Error('invalid id'));
+    }
+
+    var note = {  };
 
     self.getNoteDetails(folderId, noteId, function(err, note) {
-      if (err) return;
-      note = note;
+      if (err) return fn(new Error(err));
+      if (note.length === 0) return fn(new Error('cannot find note'));
+      note = note[0];
 
       self.getVersions(folderId, noteId, function(err, versions) {
-        if (err) return;
-        note['versions'] = versions
-      });
+        if (err) return fn(new Error(err));
+        if (versions.length === 0) return fn(new Error('cannot find versions'));
+        note['versions'] = versions;
 
-      fn(null, note);
+        fn(null, note);
+      });
     });
   }
 
@@ -433,18 +583,21 @@ var Concreet = function () {
         $match: { _id: new ObjectId(folderId) }
       }, {
         $unwind: '$notes'
+      }, { 
+        $sort: { 'notes.versions.created_at': -1 }
       }, {
         $project: {
           _id: '$notes._id',
           title: '$notes.title',
           created_by: '$notes.created_by',
-          created_at: '$notes.created_at'
+          created_at: '$notes.created_at',
+          versions: '$notes.versions'
         }
       }
     ],
     function (err, folder) {
       if (folder) {
-        if (err) return fn(new Error('cannot find folder'));
+        if (err) return fn(new Error(err));
         fn(null, folder)
       } else {
         return fn(new Error('cannot find folder'));
@@ -454,22 +607,15 @@ var Concreet = function () {
 
   self.getFoldersInFolder = function(folderId, fn) {
     self.Folder.aggregate([
-      {
-        $match: { _id: new ObjectId(folderId) }
+      { 
+        $match: { parent: new ObjectId(folderId) }
       }, {
-        $unwind: '$folders'
-      }, {
-        $project: {
-          _id: '$folders._id',
-          title: '$folders.title',
-          created_by: "$folders.created_by",
-          created_at: "$folders.created_at"
-        }
+        $sort: { 'folder.created_at': -1 }
       }
     ],
     function (err, folder) {
       if (folder) {
-        if (err) return fn(new Error('cannot find folder'));
+        if (err) return fn(new Error(err));
         fn(null, folder)
       } else {
         return fn(new Error('cannot find folder'));
@@ -478,17 +624,28 @@ var Concreet = function () {
   };
 
   self.getFolder = function(folderId, fn) {
-    var items = { folders: [], notes: [] };
-    
-    self.getFoldersInFolder(folderId, function(err, folders) {
-      if (err) return;
-      items['folders'] = folders;
+    var hexstringRegex = "^[0-9a-fA-F]{24}$"
+    if (!folderId.match(hexstringRegex)) {
+      return fn(new Error('invalid id'));
+    }
 
-      self.getNotesInFolder(folderId, function(err, notes) {
-        if (err) return;
-        items['notes'] = notes
+    self.Folder.findOne({ _id: folderId }, function(err, folder) {
+      if (!folder || err) {
+        return fn(new Error('invalid id'));
+      }
 
-        fn(null, items);
+      var items = { title: folder['title'], folders: [], notes: [] };
+  
+      self.getFoldersInFolder(folderId, function(err, folders) {
+        if (err) return fn(new Error(err));
+        items['folders'] = folders;
+
+        self.getNotesInFolder(folderId, function(err, notes) {
+          if (err) return fn(new Error(err));
+          items['notes'] = notes
+
+          fn(null, items);
+        });
       });
     });
   }
@@ -501,4 +658,3 @@ var Concreet = function () {
 var concreet = new Concreet();
 concreet.initialize();
 concreet.start();
-

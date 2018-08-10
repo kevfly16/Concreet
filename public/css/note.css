@@ -1,0 +1,54 @@
+.note-text {
+  padding: 1em 4em 3em 4em;
+  border: 1px solid rgba(34,36,38,.15);
+  box-shadow: 0 1px 2px 0 rgba(34,36,38,.15);
+  border-radius: .28571429rem;
+  overflow: auto;
+  max-height: 950px;
+}
+
+@media only screen and (max-height: 1250px) {
+  .note-text {
+    max-height: 900px;
+  }
+}
+
+@media only screen and (max-height: 1150px) {
+  .note-text {
+    max-height: 800px;
+  }
+
+@media only screen and (max-height: 1050px) {
+  .note-text {
+    max-height: 700px;
+  }
+
+@media only screen and (max-height: 950px) {
+  .note-text {
+    max-height: 600px;
+  }
+}
+
+@media only screen and (max-height: 850px) {
+  .note-text {
+    max-height: 500px;
+  }
+}
+
+@media only screen and (max-height: 750px) {
+  .note-text {
+    max-height: 400px;
+  }
+}
+
+@media only screen and (max-height: 650px) {
+  .note-text {
+    max-height: 200px;
+  }
+}
+
+@media only screen and (max-height: 550px) {
+  .note-text {
+    max-height: 100px;
+  }
+}

@@ -9,30 +9,77 @@ html(lang="en")
   title Note
   link(rel="stylesheet" type="text/css" href="/semantic/dist/semantic.min.css")
   link(rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css")
-  link(rel="stylesheet" href="bower_components/medium-editor/dist/css/medium-editor.min.css")
-  link(rel="stylesheet" href="bower_components/medium-editor/dist/css/themes/default.css")
-  link(rel="stylesheet" href="bower_components/medium-editor-insert-plugin/dist/css/medium-editor-insert-plugin.min.css")
+  link(rel="stylesheet" href="/medium-editor/dist/css/medium-editor.min.css")
+  link(rel="stylesheet" href="/medium-editor/dist/css/themes/default.css")
+  link(rel="stylesheet" href="/medium-editor-insert-plugin/dist/css/medium-editor-insert-plugin.min.css")
   link(rel="stylesheet" type="text/css" href="/css/common.css")
   link(rel="stylesheet" type="text/css" href="/css/note.css")
 
   script(src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous")
   script(src="/semantic/dist/semantic.min.js")
-  script(src="bower_components/medium-editor/dist/js/medium-editor.js")
-  script(src="bower_components/handlebars/handlebars.runtime.min.js")
-  script(src="bower_components/jquery-sortable/source/js/jquery-sortable-min.js")
-  script(src="bower_components/blueimp-file-upload/js/vendor/jquery.ui.widget.js")
-  script(src="bower_components/blueimp-file-upload/js/jquery.iframe-transport.js")
-  script(src="bower_components/blueimp-file-upload/js/jquery.fileupload.js")
-  script(src="bower_components/medium-editor-insert-plugin/dist/js/medium-editor-insert-plugin.min.js")
+  script(src="/medium-editor/dist/js/medium-editor.js")
+  script(src="/handlebars/handlebars.runtime.min.js")
+  script(src="/jquery-sortable/source/js/jquery-sortable-min.js")
+  script(src="/blueimp-file-upload/js/vendor/jquery.ui.widget.js")
+  script(src="/blueimp-file-upload/js/jquery.iframe-transport.js")
+  script(src="/blueimp-file-upload/js/jquery.fileupload.js")
+  script(src="/medium-editor-insert-plugin/dist/js/medium-editor-insert-plugin.min.js")
   script(src="/js/common.js")
   script(src="/js/note.js")
 
   body
-  include head.pug
+    include head.pug
 
-  .ui.main.container
-    .ui.form
-      .field
-        textarea.editor
+    .ui.main.container
 
-  include foot.pug
+      .ui.form(style="margin-bottom: 1em;")
+        .ui.error.message
+        .ui.success.message
+        .ui.info.message
+
+      .ui.grid
+        .column.left.aligned
+          form.ui.form(method='post')
+            .ui.segment
+              if title && versions
+                .ui.grid
+                  .twelve.wide.column.ui.container.left.aligned
+                    .ui.card(style="border: none;box-shadow: none;")
+                      .content
+                        .header
+                          .ui.input
+                            input(name="title" type="text" placeholder="Title" required="" value=title)
+                        .meta Updated 
+                          = versions[version]['created_at'].toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })
+                        .meta
+                          i.user.icon
+                          | 
+                          = versions[version]['created_by']
+                  
+                  .four.wide.column.ui.container.right.aligned
+                    a.ui.basic.blue.button(href=`/${parent}/${_id}/history`)
+                      i.history.icon
+                      | Revisions 
+
+              else
+                .field
+                  .ui.input
+                    input(name="title" type="text" placeholder="Title" required="")
+            
+              .note-text
+                .field
+                  .ui.input.hidden
+                    input.hidden(name="text" type="text")
+                  .editor
+
+                  if versions
+                    script.
+                      var html = `#{versions[version]['text']}`;
+                      html = html.replace(/&amp;/g, "&").replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&quot;/g, "\"");
+                      $('.editor').prepend($(html));
+
+              .ui.container.right.aligned(style="margin-top: 1em;")
+                button.ui.medium.blue.submit.button(type="submit") Save
+                a.ui.medium.red.cancel.button(href=`/view/${parent}`) Cancel
+
+    include foot.pug

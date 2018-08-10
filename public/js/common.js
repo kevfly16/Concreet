@@ -17,5 +17,17 @@ $(document).ready(function() {
   if (error) {
     $('.ui.error.message').append('<ul class="list"><li>' + error.replace(/_/g, ' ').capitalize() + '</li></ul>');
     $('.ui.error.message').show();
+    setTimeout(function() { 
+      $('.ui.error.message').fadeOut();
+    }, 3000);
+  }
+
+  var success = getParameterByName('success');
+  if (success) {
+    $('.ui.success.message').append('<ul class="list"><li>' + success.replace(/_/g, ' ').capitalize() + '</li></ul>');
+    $('.ui.success.message').show();
+    setTimeout(function() {
+      $('.ui.success.message').fadeOut();
+    }, 3000);
   }
 });

@@ -20,22 +20,49 @@ html(lang="en")
     include head.pug
 
     .ui.main.container
-      
-      .ui.center.aligned.grid
-        .twelve.wide.column.right.aligned
-          .ui.container
-            .ui.large.buttons
-              .ui.icon.blue.button(style="padding-left: 15px;padding-right: 15px;")
-                i.white.folder.outline.icon
-                i.white.plus.circle.icon(style="line-height: 0;text-indent: -5px;font-size: 12px;")
-              .or
-              .ui.icon.blue.button(style="padding-left: 20px;")
-                i.white.sticky.note.outline.icon
-                i.white.plus.circle.icon(style="line-height: 0;text-indent: -5px;font-size: 12px;")
 
-      .ui.center.aligned.grid
+      .ui.form(style="margin-bottom: 1em;")
+        .ui.error.message
+        .ui.success.message
+
+      if title && title.length
+        .ui.left.aligned.grid
+          .four.wide.column.center.aligned
+            form.ui.form(method='post' action=`/edit/${parent}`)
+              .field
+                .ui.labeled.input
+                  .ui.label
+                    | Folder Name
+                  input(type="text" name="title" value=title)
+              
+                  button.ui.blue.button.submit(style="margin-left: 1em;") Save
+
+      if folders.length === 0 && notes.length === 0
+        .ui.center.aligned.grid
+          .twelve.wide.column.center.aligned(style="margin-top: 10em;")
+            img.image(src="/assets/images/default.ico" style="width: 400px;")
+            p(style="color: #7e7e7e;") Get to Writing ...
+          .twelve.wide.column.center.aligned
+            .ui.large.buttons
+              a.ui.blue.button(href=`/new/${parent}/folder`) Add Folder
+              .or
+              a.ui.blue.button(href=`/new/${parent}/note`) Add Note
+      else
+        .ui.center.aligned.grid
+          .twelve.wide.column.right.aligned
+            .ui.container
+              .ui.large.buttons
+                a.ui.icon.blue.button(href=`/new/${parent}/folder` style="padding-left: 15px;padding-right: 15px;")
+                  i.white.folder.outline.icon
+                  i.white.plus.circle.icon(style="line-height: 0;text-indent: -5px;font-size: 12px;")
+                .or
+                a.ui.icon.blue.button(href=`/new/${parent}/note` style="padding-left: 20px;")
+                  i.white.sticky.note.outline.icon
+                  i.white.plus.circle.icon(style="line-height: 0;text-indent: -5px;font-size: 12px;")
+
+      .ui.grid
         each folder in folders
-          .four.wide.column
+          .four.wide.column.left.aligned
             a.ui.raised.link.card(href=`/view/${folder["_id"]}`)
               .image
                 img.type(src="/assets/images/folder-icon.png")
@@ -52,8 +79,8 @@ html(lang="en")
 
         each note in notes
           .four.wide.column
-            .four.wide.column
-              a.ui.raised.link.card(href=`/view/${parent}/${note["_id"]}`)
+            .four.wide.column.left.aligned
+              a.ui.raised.link.card(href=`/edit/${parent}/${note["_id"]}`)
                 .image
                   img.type(src="/assets/images/note-icon.png")
                 .content
@@ -61,10 +88,10 @@ html(lang="en")
                   .meta
                     span
                       | Updated 
-                      = note['created_at'].toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })
+                      = note['versions'][note['versions'].length-1]['created_at'].toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true })
                 
                 .extra.content    
                   i.user.icon
-                  = note['created_by']
+                  = note['versions'][note['versions'].length-1]['created_by']
 
     include foot.pug

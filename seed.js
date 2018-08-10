@@ -8,8 +8,6 @@ var mongoHost = process.env.MONGO_HOST,
 
 var mongoURL = 'mongodb://' + mongoUser + ':' + mongoPassword + '@' + mongoHost + ':' +  mongoPort + '/' + mongoDatabase
 
-console.log(mongoURL);
-
 module.exports = {
   "undefined": mongoURL,
   "dev": mongoURL,

@@ -1,7 +1,7 @@
 p.logo-text {
   color: #2b74e8;
   margin-left: -4px;
-    margin-top: -2px;
+  margin-top: -2px;
 }
 
 body {
@@ -12,4 +12,8 @@ body {
 
 .main.container {
   flex: 1;
+}
+
+.hidden {
+  display: none;
 }

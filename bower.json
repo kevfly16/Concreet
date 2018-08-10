@@ -1,6 +1,6 @@
 {
   "name": "concreet",
-  "description": "A web app that lets users add/edit and share notes. The notes have primarily text with some images and other embedded content and links. The app is collaborative with multiple users being able to make changes.",
+  "description": "A web app that lets users add/edit and share notes.",
   "main": "app.js",
   "authors": [
     "Kevin Flyangolts <kevfly16@gmail.com>"
